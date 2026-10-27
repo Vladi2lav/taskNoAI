@@ -1,0 +1,60 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+  PARSE_SCHEDULE: "0 7 * * *"
+  PARSE_TIMEZONE: Asia/Almaty
+  PARSE_EXCHANGES: ets,ccx
+
+services:
+  flaskapp:
+    container_name: flaskapp
+    image: flaskapp:1.0.0
+    build:
+      context: ./backend
+      dockerfile: flask.dockerfile
+    ports:
+      - 4000:4000
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  scheduler:
+    container_name: scheduler
+    image: flaskapp:1.0.0
+    command: ["flask", "scheduler"]
+    environment: *backend-env
+    restart: unless-stopped
+    depends_on:
+      flaskapp:
+        condition: service_started
+
+  frontend:
+    container_name: frontend
+    image: frontend:1.0.0
+    build:
+      context: ./frontend
+      dockerfile: frontend.dockerfile
+    ports:
+      - 3000:80
+    depends_on:
+      - flaskapp
+
+  db:
+    container_name: db
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata: {}

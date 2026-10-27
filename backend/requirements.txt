@@ -1,0 +1,13 @@
+Flask>=3.0
+Flask-SQLAlchemy>=3.1
+SQLAlchemy>=2.0
+psycopg[binary]
+Flask-CORS
+gunicorn
+click
+Flask-Migrate
+requests
+beautifulsoup4
+lxml
+openpyxl
+APScheduler>=3.10,<4
